@@ -1,13 +1,14 @@
 {
   "name": "wireguard-dns-bot",
-  "version": "1.0.0",
-  "description": "ربات تولید کانفیگ وایرگارد و DNS",
+  "version": "2.0.0",
+  "description": "ربات تولید کانفیگ وایرگارد و DNS با چنل اجباری",
   "main": "start.js",
   "scripts": {
     "start": "node start.js"
   },
   "dependencies": {
     "telegraf": "^4.15.3",
-    "express": "^4.18.2"
+    "express": "^4.18.2",
+    "fs": "^0.0.1-security"
   }
 }
