@@ -1,6 +1,7 @@
 {
-  "name": "test-bot",
+  "name": "wireguard-dns-bot",
   "version": "1.0.0",
+  "description": "ربات تولید کانفیگ وایرگارد و DNS",
   "main": "start.js",
   "scripts": {
     "start": "node start.js"
