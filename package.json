@@ -1,7 +1,6 @@
 {
-  "name": "wireguard-bot",
+  "name": "test-bot",
   "version": "1.0.0",
-  "description": "ربات تولید کانفیگ وایرگارد",
   "main": "start.js",
   "scripts": {
     "start": "node start.js"
