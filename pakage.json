@@ -1,0 +1,13 @@
+{
+  "name": "wireguard-bot",
+  "version": "1.0.0",
+  "description": "ربات تولید کانفیگ وایرگارد",
+  "main": "start.js",
+  "scripts": {
+    "start": "node start.js"
+  },
+  "dependencies": {
+    "telegraf": "^4.15.3",
+    "express": "^4.18.2"
+  }
+}
