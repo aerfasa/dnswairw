@@ -1,10 +1,18 @@
+کد کامل و اصلاح‌شده رو برات آماده کردم. تغییرات اصلی:
+1. ✅ **وایرگارد کاملاً حذف شد** (دکمه، هندلرها، متغیرها و تابع ساخت کانفیگ)
+2. ✅ **عضویت اجباری چندکاناله** شد با دستورات `add`، `remove`، `clear` و `list`
+3. ✅ **لیست کانال‌ها به صورت دکمه شیشه‌ای (URL)** نمایش داده می‌شه تا کاربر مستقیم بتونه عضو بشه
+4. ✅ **دکمه کپی حذف شد** و کانفیگ DNS مستقیماً با فرمت `<pre>` (مونواسپیس) ارسال می‌شه که در تلگرام با یک ضربه قابل کپی‌کردنه
+5. ✅ **باگ میدل‌ور عضویت اجباری** کاملاً رفع شد (بررسی دقیق، هندلر جداگانه برای دکمه «عضو شدم»، و عدم بلاک‌شدن ربات)
+
+### 📜 کد نهایی (کامل و آماده اجرا)
+```javascript
 const { Telegraf, Markup } = require('telegraf');
 const express = require('express');
 const fs = require('fs');
 
 // ===================== تنظیمات =====================
 const BOT_TOKEN = process.env.BOT_TOKEN;
-
 if (!BOT_TOKEN) {
     console.error('❌ BOT_TOKEN not set!');
     process.exit(1);
@@ -13,6 +21,7 @@ if (!BOT_TOKEN) {
 const bot = new Telegraf(BOT_TOKEN);
 const app = express();
 const PORT = process.env.PORT || 3000;
+const ADMIN_ID = 6732134123;
 
 // ===================== دیتابیس ساده =====================
 const DATA_FILE = 'data.json';
@@ -20,26 +29,30 @@ const DATA_FILE = 'data.json';
 function loadData() {
     try {
         if (fs.existsSync(DATA_FILE)) {
-            return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+            const d = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+            // مهاجرت از نسخه تک‌کاناله به چندکاناله
+            if (d.forcedChannel && !d.forcedChannels) {
+                d.forcedChannels = [d.forcedChannel];
+                delete d.forcedChannel;
+            }
+            if (!Array.isArray(d.forcedChannels)) d.forcedChannels = [];
+            return d;
         }
     } catch (error) {
-        console.error('❌ خطا:', error);
+        console.error('❌ خطا در خواندن دیتا:', error.message);
     }
-    return { forcedChannel: null };
+    return { forcedChannels: [] };
 }
 
 function saveData(data) {
     try {
         fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
     } catch (error) {
-        console.error('❌ خطا:', error);
+        console.error('❌ خطا در ذخیره دیتا:', error.message);
     }
 }
 
 let data = loadData();
-
-// ===================== ادمین =====================
-const ADMIN_ID = 6732134123;
 
 // ===================== دیتای ثابت =====================
 const countries = [
@@ -95,181 +108,159 @@ const countries = [
     { name: '🇮🇹 ایتالیا', code: 'IT', ipv6: '2a00:19c3:5000::' }
 ];
 
-// ===================== وضعیت کاربران =====================
 const userStates = {};
-
-// ===================== گزینه‌های دلخواه =====================
 const options = {
     traffic: ['1GB', '2GB', '5GB', '10GB', 'دلخواه'],
     users: ['1', '2', '5', '10', 'دلخواه'],
     days: ['1', '7', '15', '30', '60', 'دلخواه']
 };
 
-// ===================== دکمه‌های شیشه‌ای =====================
+// ===================== توابع کمکی =====================
 function createGlassKeyboard(buttons) {
     const keyboard = [];
     for (let i = 0; i < buttons.length; i += 2) {
         const row = [];
         for (let j = i; j < Math.min(i + 2, buttons.length); j++) {
-            row.push({
-                text: buttons[j].text,
-                callback_data: buttons[j].callback_data
-            });
+            row.push({ text: buttons[j].text, callback_data: buttons[j].callback_data });
         }
         keyboard.push(row);
     }
     return Markup.inlineKeyboard(keyboard);
 }
 
-// ===================== بررسی چنل اجباری (اصلاح‌شده) =====================
-async function checkForcedChannel(ctx) {
-    if (!data.forcedChannel) return true;
-
-    const userId = ctx.from?.id;
-    if (!userId) return true;
-
-    // ادمین همیشه مجاز است
-    if (userId === ADMIN_ID) return true;
-
-    try {
-        const chatMember = await ctx.telegram.getChatMember(data.forcedChannel, userId);
-        const status = chatMember.status;
-
-        if (status === 'left' || status === 'kicked') {
-            // ساخت لینک صحیح کانال
-            let channelLink = data.forcedChannel;
-            if (channelLink.startsWith('@')) {
-                channelLink = `https://t.me/${channelLink.slice(1)}`;
-            }
-
-            await ctx.reply(
-                `⚠️ *برای استفاده از ربات باید در کانال زیر عضو شوید:*\n\n` +
-                `🔗 [عضویت در کانال](${channelLink})\n\n` +
-                `❌ بعد از عضویت دکمه زیر را بزنید.`,
-                {
-                    parse_mode: 'Markdown',
-                    disable_web_page_preview: true,
-                    ...Markup.inlineKeyboard([
-                        [{ text: '✅ عضو شدم', callback_data: 'check_membership' }]
-                    ])
-                }
-            );
-            return false;
-        }
-        return true;
-    } catch (error) {
-        console.error('❌ خطا در بررسی چنل:', error.message);
-        // اگر خطا رخ داد، اجازه دسترسی بده (جلوگیری از بلاک شدن ربات)
-        return true;
-    }
+function escapeHtml(text) {
+    return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-// ===================== Middleware چنل اجباری (اصلاح‌شده) =====================
-bot.use(async (ctx, next) => {
-    // فقط روی پیام‌ها و کالبک‌ها چک کن
-    if (!ctx.from) return next();
+// ===================== بررسی عضویت اجباری (چندکاناله) =====================
+async function isUserInAllChannels(ctx) {
+    if (!data.forcedChannels?.length) return true;
+    const userId = ctx.from?.id;
+    if (!userId || userId === ADMIN_ID) return true;
 
-    // اگر چنل اجباری تنظیم نشده، رد شو
-    if (!data.forcedChannel) return next();
-
-    // ادمین همیشه مجاز است
-    if (ctx.from.id === ADMIN_ID) return next();
-
-    // اگر کاربر دکمه «عضو شدم» را زد، چک کن
-    if (ctx.callbackQuery?.data === 'check_membership') {
-        const isMember = await checkForcedChannel(ctx);
-        if (isMember) {
-            await ctx.answerCbQuery('✅ خوش آمدید!');
-            // منوی اصلی را نشان بده
-            await ctx.reply(
-                `🌐 *پنل DNS گیمینگ*\n\n` +
-                `به پنل تولید DNS خوش آمدید!\n` +
-                `لطفاً یکی از گزینه‌های زیر را انتخاب کنید:`,
-                {
-                    parse_mode: 'Markdown',
-                    ...createGlassKeyboard([
-                        { text: '🌍 DNS', callback_data: 'dns_start' }
-                    ])
-                }
-            );
-            await ctx.answerCbQuery().catch(() => {});
-            return;
-        } else {
-            await ctx.answerCbQuery('❌ هنوز عضو نشده‌اید!').catch(() => {});
-            return;
+    for (const ch of data.forcedChannels) {
+        try {
+            const m = await ctx.telegram.getChatMember(ch, userId);
+            if (m.status === 'left' || m.status === 'kicked') return false;
+        } catch (e) {
+            // اگر ربات ادمین نبود یا چنل وجود نداشت، خطا رو لاگ کن ولی بلاک نکن
+            console.error(`⚠️ خطا در بررسی چنل ${ch}:`, e.message);
         }
     }
+    return true;
+}
 
-    // برای پیام‌های عادی و کالبک‌های دیگر
-    const isMember = await checkForcedChannel(ctx);
-    if (!isMember) {
-        if (ctx.callbackQuery) {
-            await ctx.answerCbQuery('❌ ابتدا در کانال عضو شوید!').catch(() => {});
+async function sendJoinMessage(ctx) {
+    const buttons = data.forcedChannels.map(ch => {
+        const url = ch.startsWith('@') ? `https://t.me/${ch.slice(1)}` : ch;
+        return [Markup.button.url(`🔗 عضویت در ${ch}`, url)];
+    });
+    buttons.push([Markup.button.callback('✅ عضو شدم', 'check_membership')]);
+
+    await ctx.reply(
+        `⚠️ *برای استفاده از ربات باید در کانال‌های زیر عضو شوید:*\n\n` +
+        `❌ بعد از عضویت در همه کانال‌ها، دکمه زیر را بزنید.`,
+        {
+            parse_mode: 'Markdown',
+            disable_web_page_preview: true,
+            ...Markup.inlineKeyboard(buttons)
         }
+    );
+}
+
+// ===================== Middleware چنل اجباری =====================
+bot.use(async (ctx, next) => {
+    if (!ctx.from) return next();
+    if (ctx.from.id === ADMIN_ID) return next();
+    if (!data.forcedChannels?.length) return next();
+
+    // اجازه بده دکمه بررسی عضویت به هندلر خودش برسه
+    if (ctx.callbackQuery?.data === 'check_membership') return next();
+
+    const joined = await isUserInAllChannels(ctx);
+    if (!joined) {
+        await sendJoinMessage(ctx);
+        if (ctx.callbackQuery) await ctx.answerCbQuery('❌ ابتدا در کانال‌ها عضو شوید!').catch(() => {});
         return;
     }
-
     return next();
+});
+
+// ===================== هندلر دکمه «عضو شدم» =====================
+bot.action('check_membership', async (ctx) => {
+    const joined = await isUserInAllChannels(ctx);
+    if (joined) {
+        await ctx.answerCbQuery('✅ خوش آمدید!');
+        await ctx.reply(
+            `🌐 *پنل DNS گیمینگ*\n\nبه پنل تولید DNS خوش آمدید!\nلطفاً گزینه زیر را انتخاب کنید:`,
+            {
+                parse_mode: 'Markdown',
+                ...createGlassKeyboard([{ text: '🌍 DNS', callback_data: 'dns_start' }])
+            }
+        );
+    } else {
+        await ctx.answerCbQuery('❌ هنوز در همه کانال‌ها عضو نشده‌اید!');
+    }
 });
 
 // ===================== منوی اصلی =====================
 bot.start(async (ctx) => {
     await ctx.reply(
-        `🌐 *پنل DNS گیمینگ*\n\n` +
-        `به پنل تولید DNS خوش آمدید!\n` +
-        `لطفاً یکی از گزینه‌های زیر را انتخاب کنید:`,
+        `🌐 *پنل DNS گیمینگ*\n\nبه پنل تولید DNS خوش آمدید!\nلطفاً گزینه زیر را انتخاب کنید:`,
         {
             parse_mode: 'Markdown',
-            ...createGlassKeyboard([
-                { text: '🌍 DNS', callback_data: 'dns_start' }
-            ])
+            ...createGlassKeyboard([{ text: '🌍 DNS', callback_data: 'dns_start' }])
         }
     );
 });
 
-// ===================== تنظیم چنل اجباری (فقط ادمین) =====================
+// ===================== تنظیم چنل اجباری (چندکاناله) =====================
 bot.command('setchannel', async (ctx) => {
-    if (ctx.from.id !== ADMIN_ID) {
-        return ctx.reply('❌ فقط ادمین می‌تواند این کار را انجام دهد!');
-    }
+    if (ctx.from.id !== ADMIN_ID) return ctx.reply('❌ فقط ادمین می‌تواند این کار را انجام دهد!');
 
-    const text = ctx.message.text;
-    const parts = text.split(' ');
+    const args = ctx.message.text.split(' ');
+    const sub = args[1]?.toLowerCase();
+    const channel = args[2];
 
-    if (parts.length < 2) {
+    if (!sub || (sub !== 'list' && sub !== 'clear' && !channel)) {
         return ctx.reply(
-            `📌 *راهنمای تنظیم چنل اجباری:*\n\n` +
-            `برای تنظیم چنل:\n` +
-            `/setchannel @channel_username\n\n` +
-            `برای حذف چنل اجباری:\n` +
-            `/setchannel remove`,
+            `📌 *راهنمای چنل اجباری:*\n\n` +
+            `/setchannel add @channel\n` +
+            `/setchannel remove @channel\n` +
+            `/setchannel clear\n` +
+            `/setchannel list`,
             { parse_mode: 'Markdown' }
         );
     }
 
-    const channel = parts[1];
-
-    if (channel === 'remove') {
-        data.forcedChannel = null;
-        saveData(data);
-        return ctx.reply('✅ چنل اجباری حذف شد!');
-    }
-
-    try {
-        const chat = await ctx.getChat(channel);
-        const member = await ctx.getChatMember(channel, ctx.botInfo.id);
-
-        if (member.status !== 'administrator' && member.status !== 'creator') {
-            return ctx.reply('❌ ربات ادمین این کانال نیست! لطفاً ربات را ادمین کنید.');
+    if (sub === 'add') {
+        try {
+            const botInfo = await ctx.telegram.getMe();
+            const member = await ctx.telegram.getChatMember(channel, botInfo.id);
+            if (member.status !== 'administrator' && member.status !== 'creator') {
+                return ctx.reply('❌ ربات ادمین این کانال نیست! لطفاً ربات را ادمین کنید.');
+            }
+            if (!data.forcedChannels.includes(channel)) {
+                data.forcedChannels.push(channel);
+                saveData(data);
+                return ctx.reply(`✅ کانال ${channel} به لیست اجباری اضافه شد.`);
+            }
+            return ctx.reply('⚠️ این کانال از قبل در لیست وجود دارد.');
+        } catch (e) {
+            return ctx.reply(`❌ خطا: ${e.message}`);
         }
-
-        data.forcedChannel = channel;
+    } else if (sub === 'remove') {
+        data.forcedChannels = data.forcedChannels.filter(c => c !== channel);
         saveData(data);
-        await ctx.reply(
-            `✅ چنل اجباری تنظیم شد:\n🔗 ${channel}\n\nاز این به بعد کاربران باید در این کانال عضو باشند.`
-        );
-    } catch (error) {
-        await ctx.reply(`❌ خطا در تنظیم چنل: ${error.message}`);
+        return ctx.reply(`✅ کانال ${channel} از لیست حذف شد.`);
+    } else if (sub === 'clear') {
+        data.forcedChannels = [];
+        saveData(data);
+        return ctx.reply('✅ تمام کانال‌های اجباری حذف شدند.');
+    } else if (sub === 'list') {
+        if (!data.forcedChannels.length) return ctx.reply('❌ هیچ کانالی تنظیم نشده.');
+        const list = data.forcedChannels.map((c, i) => `${i + 1}. ${c}`).join('\n');
+        return ctx.reply(`📋 *لیست کانال‌های اجباری:*\n\n${list}`, { parse_mode: 'Markdown' });
     }
 });
 
@@ -284,44 +275,29 @@ bot.action('dns_start', async (ctx) => {
     }));
 
     await ctx.reply(
-        `🌍 *مرحله ۱: انتخاب کشور (DNS)*\n\n` +
-        `لطفاً کشور مورد نظر را انتخاب کنید:`,
-        {
-            parse_mode: 'Markdown',
-            ...createGlassKeyboard(countryButtons)
-        }
+        `🌍 *مرحله ۱: انتخاب کشور (DNS)*\n\nلطفاً کشور مورد نظر را انتخاب کنید:`,
+        { parse_mode: 'Markdown', ...createGlassKeyboard(countryButtons) }
     );
 });
 
 bot.action(/dns_country_(.+)/, async (ctx) => {
     const userId = ctx.from.id;
-    const countryCode = ctx.match[1];
-    const country = countries.find(c => c.code === countryCode);
-
+    const country = countries.find(c => c.code === ctx.match[1]);
     userStates[userId].country = country;
     userStates[userId].step = 'dns_days';
 
-    const dayButtons = options.days.map(d => ({
-        text: `${d} روز`,
-        callback_data: `dns_days_${d}`
-    }));
-
+    const dayButtons = options.days.map(d => ({ text: `${d} روز`, callback_data: `dns_days_${d}` }));
     await ctx.reply(
-        `✅ کشور *${country.name}* انتخاب شد!\n\n` +
-        `📅 *مرحله ۲: تعداد روز اعتبار*\n\n` +
-        `لطفاً یکی از گزینه‌های زیر را انتخاب کنید:`,
-        {
-            parse_mode: 'Markdown',
-            ...createGlassKeyboard(dayButtons)
-        }
+        `✅ کشور *${country.name}* انتخاب شد!\n\n📅 *مرحله ۲: تعداد روز اعتبار*\n\nلطفاً انتخاب کنید:`,
+        { parse_mode: 'Markdown', ...createGlassKeyboard(dayButtons) }
     );
 });
 
 bot.action(/dns_days_(.+)/, async (ctx) => {
     const userId = ctx.from.id;
-    const value = ctx.match[1];
     const state = userStates[userId];
     if (!state) return;
+    const value = ctx.match[1];
 
     if (value === 'دلخواه') {
         state.step = 'dns_days_custom';
@@ -330,28 +306,18 @@ bot.action(/dns_days_(.+)/, async (ctx) => {
 
     state.days = parseInt(value);
     state.step = 'dns_traffic';
-
-    const trafficButtons = options.traffic.map(t => ({
-        text: t,
-        callback_data: `dns_traffic_${t}`
-    }));
-
+    const trafficButtons = options.traffic.map(t => ({ text: t, callback_data: `dns_traffic_${t}` }));
     await ctx.reply(
-        `✅ تعداد روز: *${value}* روز\n\n` +
-        `📊 *مرحله ۳: حجم مجاز*\n\n` +
-        `لطفاً یکی از گزینه‌های زیر را انتخاب کنید:`,
-        {
-            parse_mode: 'Markdown',
-            ...createGlassKeyboard(trafficButtons)
-        }
+        `✅ تعداد روز: *${value}* روز\n\n📊 *مرحله ۳: حجم مجاز*\n\nلطفاً انتخاب کنید:`,
+        { parse_mode: 'Markdown', ...createGlassKeyboard(trafficButtons) }
     );
 });
 
 bot.action(/dns_traffic_(.+)/, async (ctx) => {
     const userId = ctx.from.id;
-    const value = ctx.match[1];
     const state = userStates[userId];
     if (!state) return;
+    const value = ctx.match[1];
 
     if (value === 'دلخواه') {
         state.step = 'dns_traffic_custom';
@@ -360,28 +326,18 @@ bot.action(/dns_traffic_(.+)/, async (ctx) => {
 
     state.traffic = parseInt(value.replace('GB', ''));
     state.step = 'dns_users';
-
-    const userButtons = options.users.map(u => ({
-        text: `${u} نفر`,
-        callback_data: `dns_users_${u}`
-    }));
-
+    const userButtons = options.users.map(u => ({ text: `${u} نفر`, callback_data: `dns_users_${u}` }));
     await ctx.reply(
-        `✅ حجم مجاز: *${value}*\n\n` +
-        `👥 *مرحله ۴: تعداد کاربران*\n\n` +
-        `لطفاً یکی از گزینه‌های زیر را انتخاب کنید:`,
-        {
-            parse_mode: 'Markdown',
-            ...createGlassKeyboard(userButtons)
-        }
+        `✅ حجم مجاز: *${value}*\n\n👥 *مرحله ۴: تعداد کاربران*\n\nلطفاً انتخاب کنید:`,
+        { parse_mode: 'Markdown', ...createGlassKeyboard(userButtons) }
     );
 });
 
 bot.action(/dns_users_(.+)/, async (ctx) => {
     const userId = ctx.from.id;
-    const value = ctx.match[1];
     const state = userStates[userId];
     if (!state) return;
+    const value = ctx.match[1];
 
     if (value === 'دلخواه') {
         state.step = 'dns_users_custom';
@@ -390,11 +346,8 @@ bot.action(/dns_users_(.+)/, async (ctx) => {
 
     state.users = parseInt(value);
     state.step = 'dns_boost';
-
     await ctx.reply(
-        `✅ تعداد کاربران: *${value}*\n\n` +
-        `🚀 *مرحله ۵: DNS تقویت شود؟*\n\n` +
-        `لطفاً انتخاب کنید:`,
+        `✅ تعداد کاربران: *${value}*\n\n🚀 *مرحله ۵: DNS تقویت شود؟*\n\nلطفاً انتخاب کنید:`,
         {
             parse_mode: 'Markdown',
             ...createGlassKeyboard([
@@ -405,185 +358,77 @@ bot.action(/dns_users_(.+)/, async (ctx) => {
     );
 });
 
-bot.action('dns_boost_yes', async (ctx) => {
+// ===================== تولید و ارسال DNS =====================
+async function finishDNS(ctx, boostStatus) {
     const userId = ctx.from.id;
     const state = userStates[userId];
     if (!state) return;
 
-    state.boost = 'بله';
+    state.boost = boostStatus;
     const dnsConfig = generateDNSConfig(state);
 
     await ctx.reply(
-        `✅ *DNS شما آماده شد!*\n\n` +
-        `📋 *جزئیات:*\n` +
+        `✅ <b>DNS شما آماده شد!</b>\n\n` +
+        `📋 <b>جزئیات:</b>\n` +
         `🌍 کشور: ${state.country.name}\n` +
         `📅 روز: ${state.days}\n` +
         `📊 حجم: ${state.traffic} GB\n` +
         `👥 کاربران: ${state.users}\n` +
         `🚀 تقویت: ${state.boost}\n\n` +
-        `📋 کانفیگ DNS شما:`,
-        {
-            parse_mode: 'Markdown',
-            ...createGlassKeyboard([
-                { text: '📋 کپی DNS', callback_data: 'copy_dns' }
-            ])
-        }
+        `👇 <b>کانفیگ DNS (برای کپی کل متن، روی آن بزنید):</b>`,
+        { parse_mode: 'HTML' }
     );
 
-    await ctx.reply(
-        `\`\n${dnsConfig}\n\`\``,
-        { parse_mode: 'Markdown' }
-    );
+    // ارسال با فرمت <pre> برای کپی آسان در تلگرام
+    await ctx.reply(`<pre>${escapeHtml(dnsConfig)}</pre>`, { parse_mode: 'HTML' });
 
-    setTimeout(() => {
-        delete userStates[userId];
-    }, 300000);
-});
+    setTimeout(() => { delete userStates[userId]; }, 300000);
+}
 
-bot.action('dns_boost_no', async (ctx) => {
-    const userId = ctx.from.id;
-    const state = userStates[userId];
-    if (!state) return;
+bot.action('dns_boost_yes', async (ctx) => await finishDNS(ctx, 'بله'));
+bot.action('dns_boost_no', async (ctx) => await finishDNS(ctx, 'خیر'));
 
-    state.boost = 'خیر';
-    const dnsConfig = generateDNSConfig(state);
-
-    await ctx.reply(
-        `✅ *DNS شما آماده شد!*\n\n` +
-        `📋 *جزئیات:*\n` +
-        `🌍 کشور: ${state.country.name}\n` +
-        `📅 روز: ${state.days}\n` +
-        `📊 حجم: ${state.traffic} GB\n` +
-        `👥 کاربران: ${state.users}\n` +
-        `🚀 تقویت: ${state.boost}\n\n` +
-        `📋 کانفیگ DNS شما:`,
-        {
-            parse_mode: 'Markdown',
-            ...createGlassKeyboard([
-                { text: '📋 کپی DNS', callback_data: 'copy_dns' }
-            ])
-        }
-    );
-
-    await ctx.reply(
-        `\`\n${dnsConfig}\n\`\``,
-        { parse_mode: 'Markdown' }
-    );
-
-    setTimeout(() => {
-        delete userStates[userId];
-    }, 300000);
-});
-
-// ===================== دریافت متن‌ها (دلخواه) =====================
+// ===================== دریافت متن‌های دلخواه =====================
 bot.on('text', async (ctx) => {
     const userId = ctx.from.id;
     const text = ctx.message.text;
     const state = userStates[userId];
     if (!state) return;
 
-    // DNS: روز دلخواه
     if (state.step === 'dns_days_custom') {
         const days = parseInt(text);
-        if (isNaN(days) || days < 1 || days > 1000) {
-            return ctx.reply('❌ لطفاً یک عدد معتبر بین ۱ تا ۱۰۰۰ وارد کنید!');
-        }
+        if (isNaN(days) || days < 1 || days > 1000) return ctx.reply('❌ عدد معتبر بین ۱ تا ۱۰۰۰ وارد کنید!');
         state.days = days;
         state.step = 'dns_traffic';
-
-        const trafficButtons = options.traffic.map(t => ({
-            text: t,
-            callback_data: `dns_traffic_${t}`
-        }));
-
-        await ctx.reply(
-            `✅ تعداد روز: *${days}* روز\n\n` +
-            `📊 *مرحله ۳: حجم مجاز*\n\n` +
-            `لطفاً یکی از گزینه‌های زیر را انتخاب کنید:`,
-            {
-                parse_mode: 'Markdown',
-                ...createGlassKeyboard(trafficButtons)
-            }
-        );
-        return;
+        const btns = options.traffic.map(t => ({ text: t, callback_data: `dns_traffic_${t}` }));
+        return ctx.reply(`✅ تعداد روز: *${days}* روز\n\n📊 *مرحله ۳: حجم مجاز*`, { parse_mode: 'Markdown', ...createGlassKeyboard(btns) });
     }
 
-    // DNS: حجم دلخواه
     if (state.step === 'dns_traffic_custom') {
         const traffic = parseInt(text);
-        if (isNaN(traffic) || traffic < 1 || traffic > 1000) {
-            return ctx.reply('❌ لطفاً یک عدد معتبر بین ۱ تا ۱۰۰۰ وارد کنید!');
-        }
+        if (isNaN(traffic) || traffic < 1 || traffic > 1000) return ctx.reply('❌ عدد معتبر بین ۱ تا ۱۰۰۰ وارد کنید!');
         state.traffic = traffic;
         state.step = 'dns_users';
-
-        const userButtons = options.users.map(u => ({
-            text: `${u} نفر`,
-            callback_data: `dns_users_${u}`
-        }));
-
-        await ctx.reply(
-            `✅ حجم مجاز: *${traffic}* گیگابایت\n\n` +
-            `👥 *مرحله ۴: تعداد کاربران*\n\n` +
-            `لطفاً یکی از گزینه‌های زیر را انتخاب کنید:`,
-            {
-                parse_mode: 'Markdown',
-                ...createGlassKeyboard(userButtons)
-            }
-        );
-        return;
+        const btns = options.users.map(u => ({ text: `${u} نفر`, callback_data: `dns_users_${u}` }));
+        return ctx.reply(`✅ حجم مجاز: *${traffic}* گیگابایت\n\n👥 *مرحله ۴: تعداد کاربران*`, { parse_mode: 'Markdown', ...createGlassKeyboard(btns) });
     }
 
-    // DNS: کاربران دلخواه
     if (state.step === 'dns_users_custom') {
         const users = parseInt(text);
-        if (isNaN(users) || users < 1 || users > 1000) {
-            return ctx.reply('❌ لطفاً یک عدد معتبر بین ۱ تا ۱۰۰۰ وارد کنید!');
-        }
+        if (isNaN(users) || users < 1 || users > 1000) return ctx.reply('❌ عدد معتبر بین ۱ تا ۱۰۰۰ وارد کنید!');
         state.users = users;
         state.step = 'dns_boost';
-
-        await ctx.reply(
-            `✅ تعداد کاربران: *${users}*\n\n` +
-            `🚀 *مرحله ۵: DNS تقویت شود؟*\n\n` +
-            `لطفاً انتخاب کنید:`,
-            {
-                parse_mode: 'Markdown',
-                ...createGlassKeyboard([
-                    { text: '✅ بله', callback_data: 'dns_boost_yes' },
-                    { text: '❌ خیر', callback_data: 'dns_boost_no' }
-                ])
-            }
+        return ctx.reply(
+            `✅ تعداد کاربران: *${users}*\n\n🚀 *مرحله ۵: DNS تقویت شود؟*`,
+            { parse_mode: 'Markdown', ...createGlassKeyboard([{ text: '✅ بله', callback_data: 'dns_boost_yes' }, { text: '❌ خیر', callback_data: 'dns_boost_no' }]) }
         );
-        return;
     }
-});
-
-// ===================== کپی DNS =====================
-bot.action('copy_dns', async (ctx) => {
-    const userId = ctx.from.id;
-    const state = userStates[userId];
-
-    if (!state || !state.country) {
-        return ctx.reply('❌ DNSی پیدا نشد! لطفاً دوباره مراحل را طی کنید.');
-    }
-
-    const dnsConfig = generateDNSConfig(state);
-
-    await ctx.reply(
-        `📋 *کانفیگ DNS شما:*\n\n` +
-        `\`\n${dnsConfig}\n\`\``,
-        { parse_mode: 'Markdown' }
-    );
 });
 
 // ===================== تابع تولید DNS =====================
 function generateDNSConfig(state) {
     const country = state.country;
-
-    function rand(min, max) {
-        return Math.floor(Math.random() * (max - min + 1)) + min;
-    }
+    const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
     const ipv4List = [];
     while (ipv4List.length < 2) {
@@ -597,116 +442,110 @@ function generateDNSConfig(state) {
         if (!ipv6List.includes(ip6)) ipv6List.push(ip6);
     }
 
-    let output = `🌐 کشور: ${country.name}\n`;
-    output += `📦 حجم: ${state.traffic} گیگ  |  🕓 مدت: ${state.days} روز  |  👥 کاربران: ${state.users}\n`;
-    output += `🧠 تقویت DNS: ${state.boost}\n`;
-    output += `─────────────────────────────\n`;
-    output += `📡 DNS 1 (IPv4): ${ipv4List[0]}\n`;
-    output += `📡 DNS 2 (IPv4): ${ipv4List[1]}\n`;
-    output += `📡 DNS 1 (IPv6): ${ipv6List[0]}\n`;
-    output += `📡 DNS 2 (IPv6): ${ipv6List[1]}\n`;
-
-    if (state.boost === 'بله') {
-        output += `🔥 نسخه بهینه شده برای پابجی 3.9 / 4 و کالاف دیوتی فعال شد.\n🎯 آنتی بن + کاهش پینگ فعال شد.\n`;
-    } else {
-        output += `⚡ حالت عادی (بدون تقویت اضافی)\n`;
-    }
-
-    output += `─────────────────────────────\n`;
-    output += `🟢 سرورهای آنلاین: ۴ (همگی فعال)`;
-
-    return output;
+    let out = `🌐 کشور: ${country.name}\n`;
+    out += `📦 حجم: ${state.traffic} گیگ  |  🕓 مدت: ${state.days} روز  |  👥 کاربران: ${state.users}\n`;
+    out += `🧠 تقویت DNS: ${state.boost}\n`;
+    out += `─────────────────────────────\n`;
+    out += `📡 DNS 1 (IPv4): ${ipv4List[0]}\n`;
+    out += `📡 DNS 2 (IPv4): ${ipv4List[1]}\n`;
+    out += `📡 DNS 1 (IPv6): ${ipv6List[0]}\n`;
+    out += `📡 DNS 2 (IPv6): ${ipv6List[1]}\n`;
+    out += state.boost === 'بله'
+        ? `🔥 نسخه بهینه شده برای پابجی 3.9 / 4 و کالاف دیوتی فعال شد.\n🎯 آنتی بن + کاهش پینگ فعال شد.\n`
+        : `⚡ حالت عادی (بدون تقویت اضافی)\n`;
+    out += `─────────────────────────────\n`;
+    out += `🟢 سرورهای آنلاین: ۴ (همگی فعال)`;
+    return out;
 }
 
 // ===================== وب‌سرور =====================
 app.get('/', (req, res) => {
     res.send(`
         <!DOCTYPE html>
-        <html>
+        <html dir="rtl">
         <head>
             <title>پنل مدیریت ربات</title>
             <style>
-                body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; text-align: center; }
-                .card { background: #f5f5f5; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-                input { padding: 10px; width: 80%; margin: 10px 0; border-radius: 8px; border: 2px solid #ddd; }
-                button { padding: 12px 30px; background: #1e1e2f; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; }
+                body { font-family: Tahoma, Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; text-align: center; background: #f0f2f5; }
+                .card { background: #fff; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+                input { padding: 10px; width: 80%; margin: 10px 0; border-radius: 8px; border: 2px solid #ddd; text-align: center; }
+                button { padding: 10px 20px; margin: 5px; background: #1e1e2f; color: white; border: none; border-radius: 8px; cursor: pointer; }
                 button:hover { background: #2b2b42; }
-                .status { margin-top: 20px; padding: 15px; background: #e8f5e9; border-radius: 8px; }
+                .status { margin-top: 20px; padding: 15px; background: #e8f5e9; border-radius: 8px; text-align: right; }
+                .ch-list { list-style: none; padding: 0; }
+                .ch-list li { background: #f5f5f5; margin: 5px 0; padding: 8px; border-radius: 6px; }
             </style>
         </head>
         <body>
             <div class="card">
                 <h1>🔧 پنل مدیریت ربات</h1>
-                <p>تنظیم چنل اجباری</p>
+                <p>مدیریت کانال‌های اجباری</p>
                 <input type="text" id="channelInput" placeholder="مثال: @channel_username" />
                 <br>
-                <button onclick="setChannel()">تنظیم چنل</button>
-                <button onclick="removeChannel()">حذف چنل</button>
+                <button onclick="manageChannel('add')">➕ افزودن</button>
+                <button onclick="manageChannel('remove')">➖ حذف</button>
+                <button onclick="manageChannel('clear')">🗑️ پاکسازی همه</button>
                 <div id="status" class="status">
-                    <strong>وضعیت فعلی:</strong> ${data.forcedChannel ? `✅ ${data.forcedChannel}` : '❌ هیچ چنلی تنظیم نشده'}
+                    <strong>📋 لیست کانال‌ها:</strong>
+                    <ul class="ch-list" id="chList"></ul>
                 </div>
-                <br><br>
-                <hr>
-                <p style="color: #666; font-size: 14px;">ربات باید ادمین چنل باشد تا کار کند</p>
             </div>
             <script>
-                async function setChannel() {
-                    const channel = document.getElementById('channelInput').value;
-                    if (!channel) return alert('لطفاً نام چنل را وارد کنید!');
-
-                    const response = await fetch('/setchannel', {
+                async function loadChannels() {
+                    const res = await fetch('/channels');
+                    const data = await res.json();
+                    const list = document.getElementById('chList');
+                    list.innerHTML = data.channels.length ? data.channels.map(c => `<li>${c}</li>`).join('') : '<li>هیچ کانالی تنظیم نشده</li>';
+                }
+                async function manageChannel(action) {
+                    const ch = document.getElementById('channelInput').value.trim();
+                    if ((action === 'add' || action === 'remove') && !ch) return alert('نام کانال را وارد کنید!');
+                    const res = await fetch('/channels', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ channel })
+                        body: JSON.stringify({ action, channel: ch })
                     });
-                    const result = await response.json();
+                    const result = await res.json();
                     alert(result.message);
-                    location.reload();
+                    loadChannels();
                 }
-
-                async function removeChannel() {
-                    const response = await fetch('/setchannel', {
-                        method: 'DELETE'
-                    });
-                    const result = await response.json();
-                    alert(result.message);
-                    location.reload();
-                }
+                loadChannels();
             </script>
         </body>
         </html>
     `);
 });
 
-// ===================== API تنظیم چنل =====================
-app.post('/setchannel', express.json(), async (req, res) => {
-    const { channel } = req.body;
+app.get('/channels', (req, res) => res.json({ channels: data.forcedChannels }));
 
-    if (!channel) {
-        return res.json({ success: false, message: 'لطفاً نام چنل را وارد کنید!' });
-    }
-
+app.post('/channels', express.json(), async (req, res) => {
+    const { action, channel } = req.body;
     try {
-        const botInfo = await bot.telegram.getMe();
-        const chat = await bot.telegram.getChat(channel);
-        const member = await bot.telegram.getChatMember(channel, botInfo.id);
-
-        if (member.status !== 'administrator' && member.status !== 'creator') {
-            return res.json({ success: false, message: '❌ ربات ادمین این کانال نیست!' });
+        if (action === 'add') {
+            if (!data.forcedChannels.includes(channel)) {
+                const botInfo = await bot.telegram.getMe();
+                const m = await bot.telegram.getChatMember(channel, botInfo.id);
+                if (m.status !== 'administrator' && m.status !== 'creator') {
+                    return res.json({ success: false, message: '❌ ربات ادمین کانال نیست!' });
+                }
+                data.forcedChannels.push(channel);
+                saveData(data);
+                return res.json({ success: true, message: `✅ ${channel} اضافه شد.` });
+            }
+            return res.json({ success: false, message: '⚠️ از قبل وجود دارد.' });
+        } else if (action === 'remove') {
+            data.forcedChannels = data.forcedChannels.filter(c => c !== channel);
+            saveData(data);
+            return res.json({ success: true, message: `✅ ${channel} حذف شد.` });
+        } else if (action === 'clear') {
+            data.forcedChannels = [];
+            saveData(data);
+            return res.json({ success: true, message: '✅ همه کانال‌ها حذف شدند.' });
         }
-
-        data.forcedChannel = channel;
-        saveData(data);
-        res.json({ success: true, message: `✅ چنل ${channel} تنظیم شد!` });
-    } catch (error) {
-        res.json({ success: false, message: `❌ خطا: ${error.message}` });
+        res.json({ success: false, message: '❌ دستور نامعتبر' });
+    } catch (e) {
+        res.json({ success: false, message: `❌ خطا: ${e.message}` });
     }
-});
-
-app.delete('/setchannel', (req, res) => {
-    data.forcedChannel = null;
-    saveData(data);
-    res.json({ success: true, message: '✅ چنل اجباری حذف شد!' });
 });
 
 // ===================== راه‌اندازی =====================
@@ -718,19 +557,22 @@ app.listen(PORT, () => {
 bot.launch()
     .then(() => {
         console.log('✅ ربات DNS راه‌اندازی شد!');
-        console.log('🛡️ برای شروع /start را بزنید.');
-        console.log('📌 تنظیم چنل اجباری: /setchannel @channel_username');
+        console.log('📌 دستورات چنل: /setchannel add|remove|clear|list');
     })
     .catch(err => console.error('❌ خطا:', err));
 
-process.once('SIGINT', () => {
-    console.log('⏹️ در حال توقف...');
-    bot.stop('SIGINT');
-    process.exit(0);
-});
+process.once('SIGINT', () => { bot.stop('SIGINT'); process.exit(0); });
+process.once('SIGTERM', () => { bot.stop('SIGTERM'); process.exit(0); });
+```
 
-process.once('SIGTERM', () => {
-    console.log('⏹️ در حال توقف...');
-    bot.stop('SIGTERM');
-    process.exit(0);
-});
+### 🛠️ نکات مهم پس از آپدیت:
+1. **فرمت کپی‌پذیر:** کانفیگ DNS با تگ `<pre>` ارسال می‌شه. در تلگرام، کاربر با **یک ضربه روی باکس خاکستری** می‌تونه کل متن رو کپی کنه (بدون نیاز به دکمه اضافه).
+2. **دستورات جدید چنل:**
+   - `/setchannel add @channel` ➕ افزودن کانال
+   - `/setchannel remove @channel` ➖ حذف یک کانال خاص
+   - `/setchannel clear` 🗑️ حذف همه کانال‌ها
+   - `/setchannel list` 📋 مشاهده لیست
+3. **وب‌پنل:** پنل وب هم آپدیت شد تا از حالت چندکاناله پشتیبانی کنه و لیست رو نشون بده.
+4. **دیتابیس:** کد به صورت خودکار دیتای قدیمی (تک‌کاناله) رو به آرایه جدید مهاجرت می‌ده. نیازی به پاک‌کردن `data.json` نیست.
+
+اگر نیاز به تغییر استایل خروجی یا اضافه کردن قابلیت دیگه‌ای داشتی، بگو تا سریع اعمال کنم. 🚀
