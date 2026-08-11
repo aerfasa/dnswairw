@@ -38,66 +38,65 @@ function saveData(data) {
 
 let data = loadData();
 
-// ===================== دیتای ثابت وایرگارد =====================
-const fixedPrivateKey = 'wE1l7SeVbFb5+OnJoJqEpRtqurznvtyP6CBHC4X6X2k=';
-const fixedPublicKey = '+0GbM2ULF0Ph3f8QH9SzRODCV9Oxj5WIE3Yda6kQZFo=';
+// ===================== ادمین =====================
+const ADMIN_ID = 6732134123;
 
+// ===================== دیتای ثابت =====================
 const countries = [
-    { name: '🇦🇪 امارات', code: 'AE', ips: [37, 216, 4], ipv6: '2a00:19c0:1000::' },
-    { name: '🇹🇷 ترکیه', code: 'TR', ips: [185, 216, 25], ipv6: '2a00:19c0:2000::' },
-    { name: '🇫🇮 فنلاند', code: 'FI', ips: [45, 155, 200], ipv6: '2a00:19c0:3000::' },
-    { name: '🇺🇸 آمریکا', code: 'US', ips: [45, 33, 20], ipv6: '2a00:19c0:4000::' },
-    { name: '🇧🇭 بحرین', code: 'BH', ips: [185, 20, 215], ipv6: '2a00:19c0:5000::' },
-    { name: '🇨🇭 سوئیس', code: 'CH', ips: [45, 230, 100], ipv6: '2a00:19c0:6000::' },
-    { name: '🇩🇪 آلمان', code: 'DE', ips: [45, 138, 10], ipv6: '2a00:19c0:7000::' },
-    { name: '🇸🇬 سنگاپور', code: 'SG', ips: [103, 169, 150], ipv6: '2a00:19c0:8000::' },
-    { name: '🇬🇧 انگلستان', code: 'GB', ips: [45, 88, 70], ipv6: '2a00:19c0:9000::' },
-    { name: '🇫🇷 فرانسه', code: 'FR', ips: [45, 155, 100], ipv6: '2a00:19c0:a000::' },
-    { name: '🇳🇱 هلند', code: 'NL', ips: [45, 137, 100], ipv6: '2a00:19c0:b000::' },
-    { name: '🇯🇵 ژاپن', code: 'JP', ips: [45, 138, 200], ipv6: '2a00:19c0:c000::' },
-    { name: '🇰🇷 کره جنوبی', code: 'KR', ips: [45, 140, 100], ipv6: '2a00:19c0:d000::' },
-    { name: '🇨🇦 کانادا', code: 'CA', ips: [45, 140, 200], ipv6: '2a00:19c0:e000::' },
-    { name: '🇦🇺 استرالیا', code: 'AU', ips: [45, 130, 100], ipv6: '2a00:19c0:f000::' },
-    { name: '🇮🇳 هند', code: 'IN', ips: [45, 130, 200], ipv6: '2a00:19c1:1000::' },
-    { name: '🇷🇺 روسیه', code: 'RU', ips: [45, 130, 150], ipv6: '2a00:19c1:2000::' },
-    { name: '🇧🇷 برزیل', code: 'BR', ips: [45, 150, 100], ipv6: '2a00:19c1:3000::' },
-    { name: '🇿🇦 آفریقای جنوبی', code: 'ZA', ips: [45, 150, 200], ipv6: '2a00:19c1:4000::' },
-    { name: '🇪🇬 مصر', code: 'EG', ips: [45, 150, 150], ipv6: '2a00:19c1:5000::' },
-    { name: '🇸🇦 عربستان', code: 'SA', ips: [45, 160, 100], ipv6: '2a00:19c1:6000::' },
-    { name: '🇵🇰 پاکستان', code: 'PK', ips: [45, 160, 200], ipv6: '2a00:19c1:7000::' },
-    { name: '🇮🇷 ایران', code: 'IR', ips: [45, 160, 150], ipv6: '2a00:19c1:8000::' },
-    { name: '🇹🇭 تایلند', code: 'TH', ips: [45, 170, 100], ipv6: '2a00:19c1:9000::' },
-    { name: '🇻🇳 ویتنام', code: 'VN', ips: [45, 170, 200], ipv6: '2a00:19c1:a000::' },
-    { name: '🇲🇾 مالزی', code: 'MY', ips: [45, 170, 150], ipv6: '2a00:19c1:b000::' },
-    { name: '🇮🇩 اندونزی', code: 'ID', ips: [45, 180, 100], ipv6: '2a00:19c1:c000::' },
-    { name: '🇵🇭 فیلیپین', code: 'PH', ips: [45, 180, 200], ipv6: '2a00:19c1:d000::' },
-    { name: '🇳🇬 نیجریه', code: 'NG', ips: [45, 180, 150], ipv6: '2a00:19c1:e000::' },
-    { name: '🇰🇪 کنیا', code: 'KE', ips: [45, 190, 100], ipv6: '2a00:19c1:f000::' },
-    { name: '🇦🇷 آرژانتین', code: 'AR', ips: [45, 190, 200], ipv6: '2a00:19c2:1000::' },
-    { name: '🇨🇱 شیلی', code: 'CL', ips: [45, 190, 150], ipv6: '2a00:19c2:2000::' },
-    { name: '🇨🇴 کلمبیا', code: 'CO', ips: [45, 200, 100], ipv6: '2a00:19c2:3000::' },
-    { name: '🇵🇪 پرو', code: 'PE', ips: [45, 200, 200], ipv6: '2a00:19c2:4000::' },
-    { name: '🇻🇪 ونزوئلا', code: 'VE', ips: [45, 200, 150], ipv6: '2a00:19c2:5000::' },
-    { name: '🇺🇦 اوکراین', code: 'UA', ips: [45, 210, 100], ipv6: '2a00:19c2:6000::' },
-    { name: '🇵🇱 لهستان', code: 'PL', ips: [45, 210, 200], ipv6: '2a00:19c2:7000::' },
-    { name: '🇷🇴 رومانی', code: 'RO', ips: [45, 210, 150], ipv6: '2a00:19c2:8000::' },
-    { name: '🇬🇷 یونان', code: 'GR', ips: [45, 220, 100], ipv6: '2a00:19c2:9000::' },
-    { name: '🇵🇹 پرتغال', code: 'PT', ips: [45, 220, 200], ipv6: '2a00:19c2:a000::' },
-    { name: '🇧🇪 بلژیک', code: 'BE', ips: [45, 220, 150], ipv6: '2a00:19c2:b000::' },
-    { name: '🇦🇹 اتریش', code: 'AT', ips: [45, 230, 200], ipv6: '2a00:19c2:c000::' },
-    { name: '🇸🇪 سوئد', code: 'SE', ips: [45, 230, 150], ipv6: '2a00:19c2:d000::' },
-    { name: '🇳🇴 نروژ', code: 'NO', ips: [45, 240, 100], ipv6: '2a00:19c2:e000::' },
-    { name: '🇩🇰 دانمارک', code: 'DK', ips: [45, 240, 200], ipv6: '2a00:19c2:f000::' },
-    { name: '🇮🇪 ایرلند', code: 'IE', ips: [45, 240, 150], ipv6: '2a00:19c3:1000::' },
-    { name: '🇳🇿 نیوزلند', code: 'NZ', ips: [45, 250, 100], ipv6: '2a00:19c3:2000::' },
-    { name: '🇲🇽 مکزیک', code: 'MX', ips: [45, 250, 200], ipv6: '2a00:19c3:3000::' },
-    { name: '🇪🇸 اسپانیا', code: 'ES', ips: [46, 10, 100], ipv6: '2a00:19c3:4000::' },
-    { name: '🇮🇹 ایتالیا', code: 'IT', ips: [46, 10, 200], ipv6: '2a00:19c3:5000::' }
+    { name: '🇦🇪 امارات', code: 'AE', ipv6: '2a00:19c0:1000::' },
+    { name: '🇹🇷 ترکیه', code: 'TR', ipv6: '2a00:19c0:2000::' },
+    { name: '🇫🇮 فنلاند', code: 'FI', ipv6: '2a00:19c0:3000::' },
+    { name: '🇺🇸 آمریکا', code: 'US', ipv6: '2a00:19c0:4000::' },
+    { name: '🇧🇭 بحرین', code: 'BH', ipv6: '2a00:19c0:5000::' },
+    { name: '🇨🇭 سوئیس', code: 'CH', ipv6: '2a00:19c0:6000::' },
+    { name: '🇩🇪 آلمان', code: 'DE', ipv6: '2a00:19c0:7000::' },
+    { name: '🇸🇬 سنگاپور', code: 'SG', ipv6: '2a00:19c0:8000::' },
+    { name: '🇬🇧 انگلستان', code: 'GB', ipv6: '2a00:19c0:9000::' },
+    { name: '🇫🇷 فرانسه', code: 'FR', ipv6: '2a00:19c0:a000::' },
+    { name: '🇳🇱 هلند', code: 'NL', ipv6: '2a00:19c0:b000::' },
+    { name: '🇯🇵 ژاپن', code: 'JP', ipv6: '2a00:19c0:c000::' },
+    { name: '🇰🇷 کره جنوبی', code: 'KR', ipv6: '2a00:19c0:d000::' },
+    { name: '🇨🇦 کانادا', code: 'CA', ipv6: '2a00:19c0:e000::' },
+    { name: '🇦🇺 استرالیا', code: 'AU', ipv6: '2a00:19c0:f000::' },
+    { name: '🇮🇳 هند', code: 'IN', ipv6: '2a00:19c1:1000::' },
+    { name: '🇷🇺 روسیه', code: 'RU', ipv6: '2a00:19c1:2000::' },
+    { name: '🇧🇷 برزیل', code: 'BR', ipv6: '2a00:19c1:3000::' },
+    { name: '🇿🇦 آفریقای جنوبی', code: 'ZA', ipv6: '2a00:19c1:4000::' },
+    { name: '🇪🇬 مصر', code: 'EG', ipv6: '2a00:19c1:5000::' },
+    { name: '🇸🇦 عربستان', code: 'SA', ipv6: '2a00:19c1:6000::' },
+    { name: '🇵🇰 پاکستان', code: 'PK', ipv6: '2a00:19c1:7000::' },
+    { name: '🇮🇷 ایران', code: 'IR', ipv6: '2a00:19c1:8000::' },
+    { name: '🇹🇭 تایلند', code: 'TH', ipv6: '2a00:19c1:9000::' },
+    { name: '🇻🇳 ویتنام', code: 'VN', ipv6: '2a00:19c1:a000::' },
+    { name: '🇲🇾 مالزی', code: 'MY', ipv6: '2a00:19c1:b000::' },
+    { name: '🇮🇩 اندونزی', code: 'ID', ipv6: '2a00:19c1:c000::' },
+    { name: '🇵🇭 فیلیپین', code: 'PH', ipv6: '2a00:19c1:d000::' },
+    { name: '🇳🇬 نیجریه', code: 'NG', ipv6: '2a00:19c1:e000::' },
+    { name: '🇰🇪 کنیا', code: 'KE', ipv6: '2a00:19c1:f000::' },
+    { name: '🇦🇷 آرژانتین', code: 'AR', ipv6: '2a00:19c2:1000::' },
+    { name: '🇨🇱 شیلی', code: 'CL', ipv6: '2a00:19c2:2000::' },
+    { name: '🇨🇴 کلمبیا', code: 'CO', ipv6: '2a00:19c2:3000::' },
+    { name: '🇵🇪 پرو', code: 'PE', ipv6: '2a00:19c2:4000::' },
+    { name: '🇻🇪 ونزوئلا', code: 'VE', ipv6: '2a00:19c2:5000::' },
+    { name: '🇺🇦 اوکراین', code: 'UA', ipv6: '2a00:19c2:6000::' },
+    { name: '🇵🇱 لهستان', code: 'PL', ipv6: '2a00:19c2:7000::' },
+    { name: '🇷🇴 رومانی', code: 'RO', ipv6: '2a00:19c2:8000::' },
+    { name: '🇬🇷 یونان', code: 'GR', ipv6: '2a00:19c2:9000::' },
+    { name: '🇵🇹 پرتغال', code: 'PT', ipv6: '2a00:19c2:a000::' },
+    { name: '🇧🇪 بلژیک', code: 'BE', ipv6: '2a00:19c2:b000::' },
+    { name: '🇦🇹 اتریش', code: 'AT', ipv6: '2a00:19c2:c000::' },
+    { name: '🇸🇪 سوئد', code: 'SE', ipv6: '2a00:19c2:d000::' },
+    { name: '🇳🇴 نروژ', code: 'NO', ipv6: '2a00:19c2:e000::' },
+    { name: '🇩🇰 دانمارک', code: 'DK', ipv6: '2a00:19c2:f000::' },
+    { name: '🇮🇪 ایرلند', code: 'IE', ipv6: '2a00:19c3:1000::' },
+    { name: '🇳🇿 نیوزلند', code: 'NZ', ipv6: '2a00:19c3:2000::' },
+    { name: '🇲🇽 مکزیک', code: 'MX', ipv6: '2a00:19c3:3000::' },
+    { name: '🇪🇸 اسپانیا', code: 'ES', ipv6: '2a00:19c3:4000::' },
+    { name: '🇮🇹 ایتالیا', code: 'IT', ipv6: '2a00:19c3:5000::' }
 ];
 
 // ===================== وضعیت کاربران =====================
 const userStates = {};
-const usedIPs = new Set();
 
 // ===================== گزینه‌های دلخواه =====================
 const options = {
@@ -122,42 +121,92 @@ function createGlassKeyboard(buttons) {
     return Markup.inlineKeyboard(keyboard);
 }
 
-// ===================== بررسی چنل اجباری =====================
+// ===================== بررسی چنل اجباری (اصلاح‌شده) =====================
 async function checkForcedChannel(ctx) {
     if (!data.forcedChannel) return true;
 
+    const userId = ctx.from?.id;
+    if (!userId) return true;
+
+    // ادمین همیشه مجاز است
+    if (userId === ADMIN_ID) return true;
+
     try {
-        const chatMember = await ctx.getChatMember(data.forcedChannel, ctx.from.id);
-        if (chatMember.status === 'left' || chatMember.status === 'kicked') {
+        const chatMember = await ctx.telegram.getChatMember(data.forcedChannel, userId);
+        const status = chatMember.status;
+
+        if (status === 'left' || status === 'kicked') {
+            // ساخت لینک صحیح کانال
+            let channelLink = data.forcedChannel;
+            if (channelLink.startsWith('@')) {
+                channelLink = `https://t.me/${channelLink.slice(1)}`;
+            }
+
             await ctx.reply(
-                `⚠️ **برای استفاده از ربات باید در کانال زیر عضو شوید:**\n\n` +
-                `🔗 [عضویت در کانال](${data.forcedChannel})\n\n` +
-                `❌ تا زمانی که عضو نشوید، ربات کار نخواهد کرد!`,
+                `⚠️ *برای استفاده از ربات باید در کانال زیر عضو شوید:*\n\n` +
+                `🔗 [عضویت در کانال](${channelLink})\n\n` +
+                `❌ بعد از عضویت دکمه زیر را بزنید.`,
                 {
                     parse_mode: 'Markdown',
-                    disable_web_page_preview: true
+                    disable_web_page_preview: true,
+                    ...Markup.inlineKeyboard([
+                        [{ text: '✅ عضو شدم', callback_data: 'check_membership' }]
+                    ])
                 }
             );
             return false;
         }
         return true;
     } catch (error) {
-        console.error('❌ خطا در بررسی چنل:', error);
+        console.error('❌ خطا در بررسی چنل:', error.message);
+        // اگر خطا رخ داد، اجازه دسترسی بده (جلوگیری از بلاک شدن ربات)
         return true;
     }
 }
 
-// ===================== Middleware چنل اجباری =====================
+// ===================== Middleware چنل اجباری (اصلاح‌شده) =====================
 bot.use(async (ctx, next) => {
-    // اگه کاربر در حال تنظیم چنل هست، چک نکن
-    if (ctx.from.id === 6732134123 && ctx.message?.text?.startsWith('/setchannel')) {
-        return next();
+    // فقط روی پیام‌ها و کالبک‌ها چک کن
+    if (!ctx.from) return next();
+
+    // اگر چنل اجباری تنظیم نشده، رد شو
+    if (!data.forcedChannel) return next();
+
+    // ادمین همیشه مجاز است
+    if (ctx.from.id === ADMIN_ID) return next();
+
+    // اگر کاربر دکمه «عضو شدم» را زد، چک کن
+    if (ctx.callbackQuery?.data === 'check_membership') {
+        const isMember = await checkForcedChannel(ctx);
+        if (isMember) {
+            await ctx.answerCbQuery('✅ خوش آمدید!');
+            // منوی اصلی را نشان بده
+            await ctx.reply(
+                `🌐 *پنل DNS گیمینگ*\n\n` +
+                `به پنل تولید DNS خوش آمدید!\n` +
+                `لطفاً یکی از گزینه‌های زیر را انتخاب کنید:`,
+                {
+                    parse_mode: 'Markdown',
+                    ...createGlassKeyboard([
+                        { text: '🌍 DNS', callback_data: 'dns_start' }
+                    ])
+                }
+            );
+            await ctx.answerCbQuery().catch(() => {});
+            return;
+        } else {
+            await ctx.answerCbQuery('❌ هنوز عضو نشده‌اید!').catch(() => {});
+            return;
+        }
     }
 
-    // اگه چنل اجباری تنظیم شده، چک کن
-    if (data.forcedChannel) {
-        const isMember = await checkForcedChannel(ctx);
-        if (!isMember) return;
+    // برای پیام‌های عادی و کالبک‌های دیگر
+    const isMember = await checkForcedChannel(ctx);
+    if (!isMember) {
+        if (ctx.callbackQuery) {
+            await ctx.answerCbQuery('❌ ابتدا در کانال عضو شوید!').catch(() => {});
+        }
+        return;
     }
 
     return next();
@@ -166,13 +215,12 @@ bot.use(async (ctx, next) => {
 // ===================== منوی اصلی =====================
 bot.start(async (ctx) => {
     await ctx.reply(
-        `🌐 **پنل وایرگارد و DNS گیمینگ**\n\n` +
-        `به پنل تولید کانفیگ و DNS خوش آمدید!\n` +
+        `🌐 *پنل DNS گیمینگ*\n\n` +
+        `به پنل تولید DNS خوش آمدید!\n` +
         `لطفاً یکی از گزینه‌های زیر را انتخاب کنید:`,
         {
             parse_mode: 'Markdown',
             ...createGlassKeyboard([
-                { text: '🛡️ وایرگارد', callback_data: 'wireguard_start' },
                 { text: '🌍 DNS', callback_data: 'dns_start' }
             ])
         }
@@ -181,20 +229,21 @@ bot.start(async (ctx) => {
 
 // ===================== تنظیم چنل اجباری (فقط ادمین) =====================
 bot.command('setchannel', async (ctx) => {
-    if (ctx.from.id !== 6732134123) {
-        return ctx.reply('❌ فقط ادمین میتواند این کار را انجام دهد!');
+    if (ctx.from.id !== ADMIN_ID) {
+        return ctx.reply('❌ فقط ادمین می‌تواند این کار را انجام دهد!');
     }
 
     const text = ctx.message.text;
     const parts = text.split(' ');
-    
+
     if (parts.length < 2) {
         return ctx.reply(
-            `📌 **راهنمای تنظیم چنل اجباری:**\n\n` +
+            `📌 *راهنمای تنظیم چنل اجباری:*\n\n` +
             `برای تنظیم چنل:\n` +
             `/setchannel @channel_username\n\n` +
             `برای حذف چنل اجباری:\n` +
-            `/setchannel remove`
+            `/setchannel remove`,
+            { parse_mode: 'Markdown' }
         );
     }
 
@@ -206,341 +255,25 @@ bot.command('setchannel', async (ctx) => {
         return ctx.reply('✅ چنل اجباری حذف شد!');
     }
 
-    // بررسی اینکه ربات ادمین چنل هست
     try {
         const chat = await ctx.getChat(channel);
         const member = await ctx.getChatMember(channel, ctx.botInfo.id);
-        
+
         if (member.status !== 'administrator' && member.status !== 'creator') {
             return ctx.reply('❌ ربات ادمین این کانال نیست! لطفاً ربات را ادمین کنید.');
         }
 
         data.forcedChannel = channel;
         saveData(data);
-        await ctx.reply(`✅ چنل اجباری تنظیم شد:\n🔗 ${channel}\n\nاز این به بعد کاربران باید در این کانال عضو باشند.`);
+        await ctx.reply(
+            `✅ چنل اجباری تنظیم شد:\n🔗 ${channel}\n\nاز این به بعد کاربران باید در این کانال عضو باشند.`
+        );
     } catch (error) {
-        ctx.reply(`❌ خطا در تنظیم چنل: ${error.message}`);
+        await ctx.reply(`❌ خطا در تنظیم چنل: ${error.message}`);
     }
 });
 
-// ===================== شروع وایرگارد =====================
-bot.action('wireguard_start', async (ctx) => {
-    const userId = ctx.from.id;
-    userStates[userId] = { step: 'select_country' };
-
-    const countryButtons = countries.map(c => ({
-        text: c.name,
-        callback_data: `wg_country_${c.code}`
-    }));
-
-    await ctx.reply(
-        `🌍 **مرحله ۱: انتخاب کشور (وایرگارد)**\n\n` +
-        `لطفاً کشور مورد نظر را انتخاب کنید:`,
-        {
-            parse_mode: 'Markdown',
-            ...createGlassKeyboard(countryButtons)
-        }
-    );
-});
-
-// ===================== انتخاب کشور وایرگارد =====================
-bot.action(/wg_country_(.+)/, async (ctx) => {
-    const userId = ctx.from.id;
-    const countryCode = ctx.match[1];
-    const country = countries.find(c => c.code === countryCode);
-    
-    userStates[userId].country = country;
-    userStates[userId].step = 'wg_days';
-
-    const dayButtons = options.days.map(d => ({
-        text: `${d} روز`,
-        callback_data: `wg_days_${d}`
-    }));
-
-    await ctx.reply(
-        `✅ کشور **${country.name}** انتخاب شد!\n\n` +
-        `📅 **مرحله ۲: تعداد روز اعتبار**\n\n` +
-        `لطفاً یکی از گزینه‌های زیر را انتخاب کنید:`,
-        {
-            parse_mode: 'Markdown',
-            ...createGlassKeyboard(dayButtons)
-        }
-    );
-});
-
-// ===================== انتخاب روز وایرگارد =====================
-bot.action(/wg_days_(.+)/, async (ctx) => {
-    const userId = ctx.from.id;
-    const value = ctx.match[1];
-    const state = userStates[userId];
-    if (!state) return;
-
-    if (value === 'دلخواه') {
-        state.step = 'wg_days_custom';
-        return ctx.reply('📝 لطفاً تعداد روز دلخواه را وارد کنید (۱ تا ۱۰۰۰):');
-    }
-
-    state.days = parseInt(value);
-    state.step = 'wg_traffic';
-
-    const trafficButtons = options.traffic.map(t => ({
-        text: t,
-        callback_data: `wg_traffic_${t}`
-    }));
-
-    await ctx.reply(
-        `✅ تعداد روز: **${value}** روز\n\n` +
-        `📊 **مرحله ۳: حجم مجاز**\n\n` +
-        `لطفاً یکی از گزینه‌های زیر را انتخاب کنید:`,
-        {
-            parse_mode: 'Markdown',
-            ...createGlassKeyboard(trafficButtons)
-        }
-    );
-});
-
-// ===================== انتخاب حجم وایرگارد =====================
-bot.action(/wg_traffic_(.+)/, async (ctx) => {
-    const userId = ctx.from.id;
-    const value = ctx.match[1];
-    const state = userStates[userId];
-    if (!state) return;
-
-    if (value === 'دلخواه') {
-        state.step = 'wg_traffic_custom';
-        return ctx.reply('📝 لطفاً حجم دلخواه را به گیگابایت وارد کنید (۱ تا ۱۰۰۰):');
-    }
-
-    state.traffic = parseInt(value.replace('GB', ''));
-    state.step = 'wg_users';
-
-    const userButtons = options.users.map(u => ({
-        text: `${u} نفر`,
-        callback_data: `wg_users_${u}`
-    }));
-
-    await ctx.reply(
-        `✅ حجم مجاز: **${value}**\n\n` +
-        `👥 **مرحله ۴: تعداد کاربران**\n\n` +
-        `لطفاً یکی از گزینه‌های زیر را انتخاب کنید:`,
-        {
-            parse_mode: 'Markdown',
-            ...createGlassKeyboard(userButtons)
-        }
-    );
-});
-
-// ===================== انتخاب کاربران وایرگارد =====================
-bot.action(/wg_users_(.+)/, async (ctx) => {
-    const userId = ctx.from.id;
-    const value = ctx.match[1];
-    const state = userStates[userId];
-    if (!state) return;
-
-    if (value === 'دلخواه') {
-        state.step = 'wg_users_custom';
-        return ctx.reply('📝 لطفاً تعداد کاربران دلخواه را وارد کنید (۱ تا ۱۰۰۰):');
-    }
-
-    state.users = parseInt(value);
-    state.step = 'wg_filename';
-
-    await ctx.reply(
-        `✅ تعداد کاربران: **${value}**\n\n` +
-        `📝 **مرحله ۵: نام فایل خروجی**\n\n` +
-        `لطفاً نام فایل خروجی را وارد کنید (پیش‌فرض: WESCORT_YT):`,
-        { parse_mode: 'Markdown' }
-    );
-});
-
-// ===================== دریافت متن‌ها (دلخواه و نام فایل) =====================
-bot.on('text', async (ctx) => {
-    const userId = ctx.from.id;
-    const text = ctx.message.text;
-    const state = userStates[userId];
-
-    if (!state) return;
-
-    // وایرگارد: روز دلخواه
-    if (state.step === 'wg_days_custom') {
-        const days = parseInt(text);
-        if (isNaN(days) || days < 1 || days > 1000) {
-            return ctx.reply('❌ لطفاً یک عدد معتبر بین ۱ تا ۱۰۰۰ وارد کنید!');
-        }
-        state.days = days;
-        state.step = 'wg_traffic';
-
-        const trafficButtons = options.traffic.map(t => ({
-            text: t,
-            callback_data: `wg_traffic_${t}`
-        }));
-
-        await ctx.reply(
-            `✅ تعداد روز: **${days}** روز\n\n` +
-            `📊 **مرحله ۳: حجم مجاز**\n\n` +
-            `لطفاً یکی از گزینه‌های زیر را انتخاب کنید:`,
-            {
-                parse_mode: 'Markdown',
-                ...createGlassKeyboard(trafficButtons)
-            }
-        );
-        return;
-    }
-
-    // وایرگارد: حجم دلخواه
-    if (state.step === 'wg_traffic_custom') {
-        const traffic = parseInt(text);
-        if (isNaN(traffic) || traffic < 1 || traffic > 1000) {
-            return ctx.reply('❌ لطفاً یک عدد معتبر بین ۱ تا ۱۰۰۰ وارد کنید!');
-        }
-        state.traffic = traffic;
-        state.step = 'wg_users';
-
-        const userButtons = options.users.map(u => ({
-            text: `${u} نفر`,
-            callback_data: `wg_users_${u}`
-        }));
-
-        await ctx.reply(
-            `✅ حجم مجاز: **${traffic}** گیگابایت\n\n` +
-            `👥 **مرحله ۴: تعداد کاربران**\n\n` +
-            `لطفاً یکی از گزینه‌های زیر را انتخاب کنید:`,
-            {
-                parse_mode: 'Markdown',
-                ...createGlassKeyboard(userButtons)
-            }
-        );
-        return;
-    }
-
-    // وایرگارد: کاربران دلخواه
-    if (state.step === 'wg_users_custom') {
-        const users = parseInt(text);
-        if (isNaN(users) || users < 1 || users > 1000) {
-            return ctx.reply('❌ لطفاً یک عدد معتبر بین ۱ تا ۱۰۰۰ وارد کنید!');
-        }
-        state.users = users;
-        state.step = 'wg_filename';
-
-        await ctx.reply(
-            `✅ تعداد کاربران: **${users}**\n\n` +
-            `📝 **مرحله ۵: نام فایل خروجی**\n\n` +
-            `لطفاً نام فایل خروجی را وارد کنید (پیش‌فرض: WESCORT_YT):`,
-            { parse_mode: 'Markdown' }
-        );
-        return;
-    }
-
-    // وایرگارد: نام فایل
-    if (state.step === 'wg_filename') {
-        const filename = text.trim() || 'WESCORT_YT';
-        state.filename = filename;
-
-        // تولید کانفیگ
-        const config = generateWireguardConfig(state);
-        state.config = config;
-
-        await ctx.reply(
-            `✅ **سرور وایرگارد شما آماده شد!**\n\n` +
-            `📋 **جزئیات:**\n` +
-            `🌍 کشور: ${state.country.name}\n` +
-            `📅 روز: ${state.days}\n` +
-            `📊 حجم: ${state.traffic} GB\n` +
-            `👥 کاربران: ${state.users}\n` +
-            `📝 نام فایل: ${state.filename}.conf\n\n` +
-            `برای دریافت فایل روی دکمه زیر کلیک کنید:`,
-            {
-                parse_mode: 'Markdown',
-                ...createGlassKeyboard([
-                    { text: '📥 دریافت فایل', callback_data: 'download_wg' },
-                    { text: '📋 کپی کانفیگ', callback_data: 'copy_wg' }
-                ])
-            }
-        );
-
-        // پاک کردن state بعد از اتمام
-        setTimeout(() => {
-            delete userStates[userId];
-        }, 300000); // 5 دقیقه
-        return;
-    }
-
-    // ===================== DNS =====================
-    if (state.step === 'dns_days_custom') {
-        const days = parseInt(text);
-        if (isNaN(days) || days < 1 || days > 1000) {
-            return ctx.reply('❌ لطفاً یک عدد معتبر بین ۱ تا ۱۰۰۰ وارد کنید!');
-        }
-        state.days = days;
-        state.step = 'dns_traffic';
-
-        const trafficButtons = options.traffic.map(t => ({
-            text: t,
-            callback_data: `dns_traffic_${t}`
-        }));
-
-        await ctx.reply(
-            `✅ تعداد روز: **${days}** روز\n\n` +
-            `📊 **مرحله ۳: حجم مجاز**\n\n` +
-            `لطفاً یکی از گزینه‌های زیر را انتخاب کنید:`,
-            {
-                parse_mode: 'Markdown',
-                ...createGlassKeyboard(trafficButtons)
-            }
-        );
-        return;
-    }
-
-    if (state.step === 'dns_traffic_custom') {
-        const traffic = parseInt(text);
-        if (isNaN(traffic) || traffic < 1 || traffic > 1000) {
-            return ctx.reply('❌ لطفاً یک عدد معتبر بین ۱ تا ۱۰۰۰ وارد کنید!');
-        }
-        state.traffic = traffic;
-        state.step = 'dns_users';
-
-        const userButtons = options.users.map(u => ({
-            text: `${u} نفر`,
-            callback_data: `dns_users_${u}`
-        }));
-
-        await ctx.reply(
-            `✅ حجم مجاز: **${traffic}** گیگابایت\n\n` +
-            `👥 **مرحله ۴: تعداد کاربران**\n\n` +
-            `لطفاً یکی از گزینه‌های زیر را انتخاب کنید:`,
-            {
-                parse_mode: 'Markdown',
-                ...createGlassKeyboard(userButtons)
-            }
-        );
-        return;
-    }
-
-    if (state.step === 'dns_users_custom') {
-        const users = parseInt(text);
-        if (isNaN(users) || users < 1 || users > 1000) {
-            return ctx.reply('❌ لطفاً یک عدد معتبر بین ۱ تا ۱۰۰۰ وارد کنید!');
-        }
-        state.users = users;
-        state.step = 'dns_boost';
-
-        await ctx.reply(
-            `✅ تعداد کاربران: **${users}**\n\n` +
-            `🚀 **مرحله ۵: DNS تقویت شود؟**\n\n` +
-            `لطفاً انتخاب کنید:`,
-            {
-                parse_mode: 'Markdown',
-                ...createGlassKeyboard([
-                    { text: '✅ بله', callback_data: 'dns_boost_yes' },
-                    { text: '❌ خیر', callback_data: 'dns_boost_no' }
-                ])
-            }
-        );
-        return;
-    }
-});
-
-// ===================== DNS =====================
+// ===================== شروع DNS =====================
 bot.action('dns_start', async (ctx) => {
     const userId = ctx.from.id;
     userStates[userId] = { step: 'select_country_dns' };
@@ -551,7 +284,7 @@ bot.action('dns_start', async (ctx) => {
     }));
 
     await ctx.reply(
-        `🌍 **مرحله ۱: انتخاب کشور (DNS)**\n\n` +
+        `🌍 *مرحله ۱: انتخاب کشور (DNS)*\n\n` +
         `لطفاً کشور مورد نظر را انتخاب کنید:`,
         {
             parse_mode: 'Markdown',
@@ -564,7 +297,7 @@ bot.action(/dns_country_(.+)/, async (ctx) => {
     const userId = ctx.from.id;
     const countryCode = ctx.match[1];
     const country = countries.find(c => c.code === countryCode);
-    
+
     userStates[userId].country = country;
     userStates[userId].step = 'dns_days';
 
@@ -574,8 +307,8 @@ bot.action(/dns_country_(.+)/, async (ctx) => {
     }));
 
     await ctx.reply(
-        `✅ کشور **${country.name}** انتخاب شد!\n\n` +
-        `📅 **مرحله ۲: تعداد روز اعتبار**\n\n` +
+        `✅ کشور *${country.name}* انتخاب شد!\n\n` +
+        `📅 *مرحله ۲: تعداد روز اعتبار*\n\n` +
         `لطفاً یکی از گزینه‌های زیر را انتخاب کنید:`,
         {
             parse_mode: 'Markdown',
@@ -604,8 +337,8 @@ bot.action(/dns_days_(.+)/, async (ctx) => {
     }));
 
     await ctx.reply(
-        `✅ تعداد روز: **${value}** روز\n\n` +
-        `📊 **مرحله ۳: حجم مجاز**\n\n` +
+        `✅ تعداد روز: *${value}* روز\n\n` +
+        `📊 *مرحله ۳: حجم مجاز*\n\n` +
         `لطفاً یکی از گزینه‌های زیر را انتخاب کنید:`,
         {
             parse_mode: 'Markdown',
@@ -634,8 +367,8 @@ bot.action(/dns_traffic_(.+)/, async (ctx) => {
     }));
 
     await ctx.reply(
-        `✅ حجم مجاز: **${value}**\n\n` +
-        `👥 **مرحله ۴: تعداد کاربران**\n\n` +
+        `✅ حجم مجاز: *${value}*\n\n` +
+        `👥 *مرحله ۴: تعداد کاربران*\n\n` +
         `لطفاً یکی از گزینه‌های زیر را انتخاب کنید:`,
         {
             parse_mode: 'Markdown',
@@ -659,8 +392,8 @@ bot.action(/dns_users_(.+)/, async (ctx) => {
     state.step = 'dns_boost';
 
     await ctx.reply(
-        `✅ تعداد کاربران: **${value}**\n\n` +
-        `🚀 **مرحله ۵: DNS تقویت شود؟**\n\n` +
+        `✅ تعداد کاربران: *${value}*\n\n` +
+        `🚀 *مرحله ۵: DNS تقویت شود؟*\n\n` +
         `لطفاً انتخاب کنید:`,
         {
             parse_mode: 'Markdown',
@@ -681,8 +414,8 @@ bot.action('dns_boost_yes', async (ctx) => {
     const dnsConfig = generateDNSConfig(state);
 
     await ctx.reply(
-        `✅ **DNS شما آماده شد!**\n\n` +
-        `📋 **جزئیات:**\n` +
+        `✅ *DNS شما آماده شد!*\n\n` +
+        `📋 *جزئیات:*\n` +
         `🌍 کشور: ${state.country.name}\n` +
         `📅 روز: ${state.days}\n` +
         `📊 حجم: ${state.traffic} GB\n` +
@@ -698,7 +431,7 @@ bot.action('dns_boost_yes', async (ctx) => {
     );
 
     await ctx.reply(
-        `\`\`\`\n${dnsConfig}\n\`\`\``,
+        `\`\n${dnsConfig}\n\`\``,
         { parse_mode: 'Markdown' }
     );
 
@@ -716,8 +449,8 @@ bot.action('dns_boost_no', async (ctx) => {
     const dnsConfig = generateDNSConfig(state);
 
     await ctx.reply(
-        `✅ **DNS شما آماده شد!**\n\n` +
-        `📋 **جزئیات:**\n` +
+        `✅ *DNS شما آماده شد!*\n\n` +
+        `📋 *جزئیات:*\n` +
         `🌍 کشور: ${state.country.name}\n` +
         `📅 روز: ${state.days}\n` +
         `📊 حجم: ${state.traffic} GB\n` +
@@ -733,7 +466,7 @@ bot.action('dns_boost_no', async (ctx) => {
     );
 
     await ctx.reply(
-        `\`\`\`\n${dnsConfig}\n\`\`\``,
+        `\`\n${dnsConfig}\n\`\``,
         { parse_mode: 'Markdown' }
     );
 
@@ -742,123 +475,119 @@ bot.action('dns_boost_no', async (ctx) => {
     }, 300000);
 });
 
-// ===================== دانلود وایرگارد =====================
-bot.action('download_wg', async (ctx) => {
-    let userConfig = null;
-    let filename = 'WESCORT_YT';
-    
-    for (const key in userStates) {
-        if (userStates[key]?.config) {
-            userConfig = userStates[key].config;
-            filename = userStates[key].filename || 'WESCORT_YT';
-            break;
+// ===================== دریافت متن‌ها (دلخواه) =====================
+bot.on('text', async (ctx) => {
+    const userId = ctx.from.id;
+    const text = ctx.message.text;
+    const state = userStates[userId];
+    if (!state) return;
+
+    // DNS: روز دلخواه
+    if (state.step === 'dns_days_custom') {
+        const days = parseInt(text);
+        if (isNaN(days) || days < 1 || days > 1000) {
+            return ctx.reply('❌ لطفاً یک عدد معتبر بین ۱ تا ۱۰۰۰ وارد کنید!');
         }
-    }
+        state.days = days;
+        state.step = 'dns_traffic';
 
-    if (!userConfig) {
-        return ctx.reply('❌ کانفیگی پیدا نشد! لطفاً دوباره مراحل را طی کنید.');
-    }
+        const trafficButtons = options.traffic.map(t => ({
+            text: t,
+            callback_data: `dns_traffic_${t}`
+        }));
 
-    try {
-        await ctx.replyWithDocument(
+        await ctx.reply(
+            `✅ تعداد روز: *${days}* روز\n\n` +
+            `📊 *مرحله ۳: حجم مجاز*\n\n` +
+            `لطفاً یکی از گزینه‌های زیر را انتخاب کنید:`,
             {
-                source: Buffer.from(userConfig, 'utf-8'),
-                filename: `${filename}.conf`
-            },
-            {
-                caption: `✅ فایل ${filename}.conf با موفقیت ساخته شد!`
+                parse_mode: 'Markdown',
+                ...createGlassKeyboard(trafficButtons)
             }
         );
-    } catch (error) {
-        console.error('❌ خطا:', error);
-        ctx.reply('❌ خطا در ارسال فایل!');
+        return;
     }
-});
 
-// ===================== کپی وایرگارد =====================
-bot.action('copy_wg', async (ctx) => {
-    let userConfig = null;
-    for (const key in userStates) {
-        if (userStates[key]?.config) {
-            userConfig = userStates[key].config;
-            break;
+    // DNS: حجم دلخواه
+    if (state.step === 'dns_traffic_custom') {
+        const traffic = parseInt(text);
+        if (isNaN(traffic) || traffic < 1 || traffic > 1000) {
+            return ctx.reply('❌ لطفاً یک عدد معتبر بین ۱ تا ۱۰۰۰ وارد کنید!');
         }
+        state.traffic = traffic;
+        state.step = 'dns_users';
+
+        const userButtons = options.users.map(u => ({
+            text: `${u} نفر`,
+            callback_data: `dns_users_${u}`
+        }));
+
+        await ctx.reply(
+            `✅ حجم مجاز: *${traffic}* گیگابایت\n\n` +
+            `👥 *مرحله ۴: تعداد کاربران*\n\n` +
+            `لطفاً یکی از گزینه‌های زیر را انتخاب کنید:`,
+            {
+                parse_mode: 'Markdown',
+                ...createGlassKeyboard(userButtons)
+            }
+        );
+        return;
     }
 
-    if (!userConfig) {
-        return ctx.reply('❌ کانفیگی پیدا نشد!');
-    }
+    // DNS: کاربران دلخواه
+    if (state.step === 'dns_users_custom') {
+        const users = parseInt(text);
+        if (isNaN(users) || users < 1 || users > 1000) {
+            return ctx.reply('❌ لطفاً یک عدد معتبر بین ۱ تا ۱۰۰۰ وارد کنید!');
+        }
+        state.users = users;
+        state.step = 'dns_boost';
 
-    await ctx.reply(
-        `📋 **کانفیگ وایرگارد شما:**\n\n` +
-        `\`\`\`\n${userConfig}\n\`\`\``,
-        { parse_mode: 'Markdown' }
-    );
+        await ctx.reply(
+            `✅ تعداد کاربران: *${users}*\n\n` +
+            `🚀 *مرحله ۵: DNS تقویت شود؟*\n\n` +
+            `لطفاً انتخاب کنید:`,
+            {
+                parse_mode: 'Markdown',
+                ...createGlassKeyboard([
+                    { text: '✅ بله', callback_data: 'dns_boost_yes' },
+                    { text: '❌ خیر', callback_data: 'dns_boost_no' }
+                ])
+            }
+        );
+        return;
+    }
 });
 
 // ===================== کپی DNS =====================
 bot.action('copy_dns', async (ctx) => {
-    let userConfig = null;
-    for (const key in userStates) {
-        if (userStates[key]?.config) {
-            userConfig = userStates[key].config;
-            break;
-        }
+    const userId = ctx.from.id;
+    const state = userStates[userId];
+
+    if (!state || !state.country) {
+        return ctx.reply('❌ DNSی پیدا نشد! لطفاً دوباره مراحل را طی کنید.');
     }
 
-    if (!userConfig) {
-        return ctx.reply('❌ DNSی پیدا نشد!');
-    }
+    const dnsConfig = generateDNSConfig(state);
 
     await ctx.reply(
-        `📋 **کانفیگ DNS شما:**\n\n` +
-        `\`\`\`\n${userConfig}\n\`\`\``,
+        `📋 *کانفیگ DNS شما:*\n\n` +
+        `\`\n${dnsConfig}\n\`\``,
         { parse_mode: 'Markdown' }
     );
 });
 
-// ===================== تابع تولید کانفیگ وایرگارد =====================
-function generateWireguardConfig(state) {
-    const country = state.country;
-    const [a, b, c] = country.ips;
-    
-    let d = Math.floor(Math.random() * 254) + 1;
-    let ip = `${a}.${b}.${c}.${d}`;
-    while (usedIPs.has(ip)) {
-        d = Math.floor(Math.random() * 254) + 1;
-        ip = `${a}.${b}.${c}.${d}`;
-    }
-    usedIPs.add(ip);
-
-    const dns = '10.202.10.11, 1.1.1.1';
-    const mtu = '1380';
-    const address = `10.66.66.${Math.floor(Math.random() * 200 + 2)}/32`;
-    const ipv6 = country.ipv6 + Math.floor(Math.random() * 100 + 1);
-
-    return `[Interface]
-PrivateKey = ${fixedPrivateKey}
-Address = ${address}
-MTU = ${mtu}
-DNS = ${dns}
-
-[Peer]
-PublicKey = ${fixedPublicKey}
-Endpoint = ${ip}:51820
-PersistentKeepalive = 25
-AllowedIPs = ::/0`;
-}
-
 // ===================== تابع تولید DNS =====================
 function generateDNSConfig(state) {
     const country = state.country;
-    
+
     function rand(min, max) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
     const ipv4List = [];
     while (ipv4List.length < 2) {
-        const ip = `${rand(1,255)}.${rand(1,255)}.${rand(1,255)}.${rand(1,255)}`;
+        const ip = `${rand(1, 255)}.${rand(1, 255)}.${rand(1, 255)}.${rand(1, 255)}`;
         if (!ipv4List.includes(ip)) ipv4List.push(ip);
     }
 
@@ -924,7 +653,7 @@ app.get('/', (req, res) => {
                 async function setChannel() {
                     const channel = document.getElementById('channelInput').value;
                     if (!channel) return alert('لطفاً نام چنل را وارد کنید!');
-                    
+
                     const response = await fetch('/setchannel', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -934,7 +663,7 @@ app.get('/', (req, res) => {
                     alert(result.message);
                     location.reload();
                 }
-                
+
                 async function removeChannel() {
                     const response = await fetch('/setchannel', {
                         method: 'DELETE'
@@ -952,17 +681,16 @@ app.get('/', (req, res) => {
 // ===================== API تنظیم چنل =====================
 app.post('/setchannel', express.json(), async (req, res) => {
     const { channel } = req.body;
-    
+
     if (!channel) {
         return res.json({ success: false, message: 'لطفاً نام چنل را وارد کنید!' });
     }
 
     try {
-        // بررسی اینکه ربات ادمین هست
         const botInfo = await bot.telegram.getMe();
         const chat = await bot.telegram.getChat(channel);
         const member = await bot.telegram.getChatMember(channel, botInfo.id);
-        
+
         if (member.status !== 'administrator' && member.status !== 'creator') {
             return res.json({ success: false, message: '❌ ربات ادمین این کانال نیست!' });
         }
@@ -989,7 +717,7 @@ app.listen(PORT, () => {
 
 bot.launch()
     .then(() => {
-        console.log('✅ ربات وایرگارد و DNS راه‌اندازی شد!');
+        console.log('✅ ربات DNS راه‌اندازی شد!');
         console.log('🛡️ برای شروع /start را بزنید.');
         console.log('📌 تنظیم چنل اجباری: /setchannel @channel_username');
     })
