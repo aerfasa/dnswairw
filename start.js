@@ -24,11 +24,9 @@ function loadData() {
     try {
         if (fs.existsSync(DATA_FILE)) {
             const loaded = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
-            // اطمینان از اینکه forcedChannel آرایه است
             if (!loaded.forcedChannel) {
                 loaded.forcedChannel = [];
             } else if (!Array.isArray(loaded.forcedChannel)) {
-                // اگر فرمت قدیمی است (تک چنل)، تبدیل به آرایه
                 loaded.forcedChannel = [loaded.forcedChannel];
             }
             return loaded;
@@ -123,7 +121,8 @@ function createGlassKeyboard(buttons) {
         for (let j = i; j < Math.min(i + 2, buttons.length); j++) {
             row.push({
                 text: buttons[j].text,
-                callback_data: buttons[j].callback_data
+                callback_data: buttons[j].callback_data,
+                url: buttons[j].url
             });
         }
         keyboard.push(row);
@@ -131,10 +130,9 @@ function createGlassKeyboard(buttons) {
     return Markup.inlineKeyboard(keyboard);
 }
 
-// ===================== بررسی چنل اجباری =====================
+// ===================== بررسی چنل اجباری (اصلاح شده) =====================
 async function checkForcedChannel(ctx) {
     if (!data.forcedChannel || data.forcedChannel.length === 0) {
-        console.log('⚠️ هیچ چنلی تنظیم نشده');
         return true;
     }
 
@@ -142,49 +140,53 @@ async function checkForcedChannel(ctx) {
     if (!userId) return true;
     if (userId === ADMIN_ID) return true;
 
-    console.log(`🔍 بررسی عضویت کاربر ${userId} در ${data.forcedChannel.length} چنل`);
-
-    // بررسی اینکه کاربر در حداقل یکی از چنل‌ها عضو باشد
-    let isMember = false;
+    // لیست چنل‌هایی که کاربر در آن‌ها عضو نیست
+    const notJoined = [];
+    
     for (const ch of data.forcedChannel) {
         try {
             const m = await ctx.telegram.getChatMember(ch, userId);
-            console.log(`📊 وضعیت کاربر در ${ch}: ${m.status}`);
-            if (m.status !== 'left' && m.status !== 'kicked') {
-                isMember = true;
-                break;
+            if (m.status === 'left' || m.status === 'kicked') {
+                notJoined.push(ch);
             }
         } catch (error) {
             console.error(`❌ خطا در بررسی چنل ${ch}:`, error.message);
+            // اگر خطا رخ داد، فرض می‌کنیم عضو نیست
+            notJoined.push(ch);
         }
     }
 
-    if (!isMember) {
-        console.log(`❌ کاربر ${userId} عضو هیچ چنلی نیست`);
-        
-        // ساخت لینک‌های کانال‌ها
-        const channelLinks = data.forcedChannel.map((ch, i) => {
-            const link = ch.startsWith('@') ? `https://t.me/${ch.slice(1)}` : ch;
-            return `${i + 1}. [${ch}](${link})`;
-        }).join('\n');
-
-        await ctx.reply(
-            `⚠️ *برای استفاده از ربات باید در یکی از کانال‌های زیر عضو شوید:*\n\n` +
-            channelLinks + `\n\n` +
-            `✅ بعد از عضویت دکمه زیر را بزنید:`,
-            {
-                parse_mode: 'Markdown',
-                disable_web_page_preview: true,
-                ...Markup.inlineKeyboard([
-                    [{ text: '✅ عضو شدم', callback_data: 'check_membership' }]
-                ])
-            }
-        );
-        return false;
+    // اگر در همه چنل‌ها عضو است
+    if (notJoined.length === 0) {
+        return true;
     }
-    
-    console.log(`✅ کاربر ${userId} عضو است`);
-    return true;
+
+    // ساخت دکمه‌های شیشه‌ای برای چنل‌ها
+    const channelButtons = notJoined.map(ch => {
+        const link = ch.startsWith('@') ? `https://t.me/${ch.slice(1)}` : ch;
+        return {
+            text: `📢 عضویت در ${ch}`,
+            url: link
+        };
+    });
+
+    // اضافه کردن دکمه "عضو شدم"
+    channelButtons.push({
+        text: '✅ عضو شدم',
+        callback_data: 'check_membership'
+    });
+
+    await ctx.reply(
+        `⚠️ *برای استفاده از ربات باید در تمام کانال‌های زیر عضو شوید:*\n\n` +
+        `تعداد چنل‌های باقی‌مانده: ${notJoined.length}\n\n` +
+        `روی هر دکمه کلیک کنید و عضو شوید، سپس دکمه «عضو شدم» را بزنید:`,
+        {
+            parse_mode: 'Markdown',
+            disable_web_page_preview: true,
+            ...Markup.inlineKeyboard(channelButtons)
+        }
+    );
+    return false;
 }
 
 // ===================== Middleware چنل اجباری =====================
@@ -211,7 +213,7 @@ bot.use(async (ctx, next) => {
             );
             return;
         } else {
-            await ctx.answerCbQuery('❌ هنوز عضو نشده‌اید!').catch(() => {});
+            await ctx.answerCbQuery('❌ هنوز در همه چنل‌ها عضو نشده‌اید!').catch(() => {});
             return;
         }
     }
@@ -255,7 +257,7 @@ bot.use(async (ctx, next) => {
     const isMember = await checkForcedChannel(ctx);
     if (!isMember) {
         if (ctx.callbackQuery) {
-            await ctx.answerCbQuery('❌ ابتدا در کانال عضو شوید!').catch(() => {});
+            await ctx.answerCbQuery('❌ ابتدا در همه چنل‌ها عضو شوید!').catch(() => {});
         }
         return;
     }
