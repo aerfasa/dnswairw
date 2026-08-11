@@ -23,7 +23,15 @@ const DATA_FILE = 'data.json';
 function loadData() {
     try {
         if (fs.existsSync(DATA_FILE)) {
-            return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+            const loaded = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+            // اطمینان از اینکه forcedChannel آرایه است
+            if (!loaded.forcedChannel) {
+                loaded.forcedChannel = [];
+            } else if (!Array.isArray(loaded.forcedChannel)) {
+                // اگر فرمت قدیمی است (تک چنل)، تبدیل به آرایه
+                loaded.forcedChannel = [loaded.forcedChannel];
+            }
+            return loaded;
         }
     } catch (error) {
         console.error('❌ خطا در بارگذاری:', error);
@@ -34,12 +42,14 @@ function loadData() {
 function saveData(data) {
     try {
         fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+        console.log('✅ داده‌ها ذخیره شدند:', data.forcedChannel);
     } catch (error) {
         console.error('❌ خطا در ذخیره:', error);
     }
 }
 
 let data = loadData();
+console.log('📊 چنل‌های بارگذاری شده:', data.forcedChannel);
 
 // ===================== دیتای ثابت کشورها =====================
 const countries = [
@@ -123,17 +133,23 @@ function createGlassKeyboard(buttons) {
 
 // ===================== بررسی چنل اجباری =====================
 async function checkForcedChannel(ctx) {
-    if (!data.forcedChannel || data.forcedChannel.length === 0) return true;
+    if (!data.forcedChannel || data.forcedChannel.length === 0) {
+        console.log('⚠️ هیچ چنلی تنظیم نشده');
+        return true;
+    }
 
     const userId = ctx.from?.id;
     if (!userId) return true;
     if (userId === ADMIN_ID) return true;
+
+    console.log(`🔍 بررسی عضویت کاربر ${userId} در ${data.forcedChannel.length} چنل`);
 
     // بررسی اینکه کاربر در حداقل یکی از چنل‌ها عضو باشد
     let isMember = false;
     for (const ch of data.forcedChannel) {
         try {
             const m = await ctx.telegram.getChatMember(ch, userId);
+            console.log(`📊 وضعیت کاربر در ${ch}: ${m.status}`);
             if (m.status !== 'left' && m.status !== 'kicked') {
                 isMember = true;
                 break;
@@ -144,6 +160,8 @@ async function checkForcedChannel(ctx) {
     }
 
     if (!isMember) {
+        console.log(`❌ کاربر ${userId} عضو هیچ چنلی نیست`);
+        
         // ساخت لینک‌های کانال‌ها
         const channelLinks = data.forcedChannel.map((ch, i) => {
             const link = ch.startsWith('@') ? `https://t.me/${ch.slice(1)}` : ch;
@@ -164,6 +182,8 @@ async function checkForcedChannel(ctx) {
         );
         return false;
     }
+    
+    console.log(`✅ کاربر ${userId} عضو است`);
     return true;
 }
 
@@ -795,6 +815,7 @@ bot.launch()
         console.log('🛡️ برای شروع /start را بزنید.');
         console.log('📌 مدیریت چنل‌ها: /channels');
         console.log('📌 تنظیم چنل: /setchannel @channel_username');
+        console.log('📊 چنل‌های فعلی:', data.forcedChannel);
     })
     .catch(err => console.error('❌ خطا:', err));
 
